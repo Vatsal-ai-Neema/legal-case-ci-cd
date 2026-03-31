@@ -1,0 +1,7 @@
+services:
+  legal-app:
+    build: .
+    container_name: legal-app
+    ports:
+      - "8000:8000"
+

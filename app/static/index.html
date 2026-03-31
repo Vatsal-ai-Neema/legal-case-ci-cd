@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legal Case CI/CD Dashboard</title>
+  <style>
+    :root {
+      --ink: #132238;
+      --muted: #56718f;
+      --paper: #f6f1e7;
+      --panel: rgba(255, 255, 255, 0.86);
+      --line: rgba(19, 34, 56, 0.12);
+      --accent: #c56b3d;
+      --accent-deep: #8a3f1f;
+      --success: #1f7a54;
+      --shadow: 0 20px 60px rgba(19, 34, 56, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(197, 107, 61, 0.25), transparent 30%),
+        linear-gradient(135deg, #efe0ca 0%, var(--paper) 55%, #e4edf4 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      width: min(1100px, calc(100% - 32px));
+      margin: 32px auto;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1;
+    }
+
+    p {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1.3fr 0.9fr;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin: 24px 0;
+    }
+
+    .stat-number {
+      display: block;
+      font-size: 2rem;
+      margin-top: 10px;
+      color: var(--accent-deep);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 140ms ease, opacity 140ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    ul {
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    .status {
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    code {
+      background: rgba(19, 34, 56, 0.06);
+      border-radius: 8px;
+      padding: 2px 8px;
+    }
+
+    @media (max-width: 760px) {
+      .hero,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .shell {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="card">
+        <p>FastAPI + Docker + GitHub Actions + AWS</p>
+        <h1>Legal Case CI/CD Dashboard</h1>
+        <p>
+          This starter project mirrors your reference design: source code in GitHub,
+          automated tests in CI, Docker image build, and cloud deployment to AWS ECR and EC2.
+        </p>
+        <div class="actions">
+          <button class="primary" onclick="loadDashboard()">Refresh Dashboard</button>
+          <button class="secondary" onclick="checkHealth()">Check Health</button>
+        </div>
+      </div>
+      <div class="card">
+        <p>Deployment health</p>
+        <h2 class="status" id="health-status">Waiting for check...</h2>
+        <p id="health-message">Use the health endpoint to verify a fresh deployment after CI/CD runs.</p>
+        <p style="margin-top:14px;">Validation endpoint: <code>/health</code></p>
+      </div>
+    </section>
+
+    <section class="stats">
+      <div class="card">
+        <p>Total users</p>
+        <span class="stat-number" id="user-count">0</span>
+      </div>
+      <div class="card">
+        <p>Total cases</p>
+        <span class="stat-number" id="case-count">0</span>
+      </div>
+      <div class="card">
+        <p>Open cases</p>
+        <span class="stat-number" id="open-count">0</span>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h3>Sample Users</h3>
+        <ul id="users-list"></ul>
+      </div>
+      <div class="card">
+        <h3>Sample Cases</h3>
+        <ul id="cases-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Request failed for ${url}`);
+      }
+      return response.json();
+    }
+
+    async function checkHealth() {
+      try {
+        const data = await fetchJson('/health');
+        document.getElementById('health-status').innerText = data.status.toUpperCase();
+        document.getElementById('health-message').innerText = data.message;
+      } catch (error) {
+        document.getElementById('health-status').innerText = 'UNAVAILABLE';
+        document.getElementById('health-message').innerText = error.message;
+      }
+    }
+
+    async function loadDashboard() {
+      const [users, cases] = await Promise.all([
+        fetchJson('/users'),
+        fetchJson('/cases')
+      ]);
+
+      document.getElementById('user-count').innerText = users.length;
+      document.getElementById('case-count').innerText = cases.length;
+      document.getElementById('open-count').innerText = cases.filter(item => item.status === 'open').length;
+
+      document.getElementById('users-list').innerHTML = users
+        .map(user => `<li>${user.name} · ${user.role}</li>`)
+        .join('');
+
+      document.getElementById('cases-list').innerHTML = cases
+        .map(legalCase => `<li>${legalCase.title} · ${legalCase.priority} priority</li>`)
+        .join('');
+
+      checkHealth();
+    }
+
+    loadDashboard().catch((error) => {
+      document.getElementById('health-status').innerText = 'ERROR';
+      document.getElementById('health-message').innerText = error.message;
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,22 @@
+name: CD Self Hosted
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Stop old container if present
+        run: docker compose down || true
+
+      - name: Build and start latest container
+        run: docker compose up -d --build
+
