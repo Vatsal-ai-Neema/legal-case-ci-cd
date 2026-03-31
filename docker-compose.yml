@@ -1,7 +1,6 @@
 services:
   legal-app:
     build: .
-    container_name: legal-app
+    container_name: ${CONTAINER_NAME:-legal-app}
     ports:
-      - "8000:8000"
-
+      - "${HOST_PORT:-8000}:8000"

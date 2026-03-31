@@ -9,14 +9,32 @@ on:
 jobs:
   deploy:
     runs-on: self-hosted
+    env:
+      DEPLOY_PATH: D:\deployments\legal-case-ci-cd
+      CONTAINER_NAME: legal-app-self-hosted
+      HOST_PORT: 8001
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Prepare isolated deployment folder
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path "$env:DEPLOY_PATH" | Out-Null
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\repo\*" -Destination "$env:DEPLOY_PATH" -Recurse -Force
 
       - name: Stop old container if present
-        run: docker compose down || true
+        shell: powershell
+        run: |
+          Set-Location "$env:DEPLOY_PATH"
+          docker compose down
+          exit 0
 
       - name: Build and start latest container
-        run: docker compose up -d --build
-
+        shell: powershell
+        run: |
+          Set-Location "$env:DEPLOY_PATH"
+          docker compose up -d --build
