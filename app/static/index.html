@@ -120,6 +120,10 @@
       gap: 18px;
     }
 
+    .about-box p + p {
+      margin-top: 8px;
+    }
+
     ul {
       padding-left: 18px;
       color: var(--muted);
@@ -161,6 +165,7 @@
         <div class="actions">
           <button class="primary" onclick="loadDashboard()">Refresh Dashboard</button>
           <button class="secondary" onclick="checkHealth()">Check Health</button>
+          <button class="secondary" onclick="loadAbout()">Load About</button>
         </div>
       </div>
       <div class="card">
@@ -187,6 +192,13 @@
     </section>
 
     <section class="grid">
+      <div class="card about-box">
+        <h3>Project Info</h3>
+        <p id="about-project">Project: Waiting for data...</p>
+        <p id="about-version">Version: -</p>
+        <p id="about-owner">Owner: -</p>
+        <p id="about-mode">Deployment: -</p>
+      </div>
       <div class="card">
         <h3>Sample Users</h3>
         <ul id="users-list"></ul>
@@ -218,6 +230,21 @@
       }
     }
 
+    async function loadAbout() {
+      try {
+        const data = await fetchJson('/about');
+        document.getElementById('about-project').innerText = `Project: ${data.project}`;
+        document.getElementById('about-version').innerText = `Version: ${data.version}`;
+        document.getElementById('about-owner').innerText = `Owner: ${data.owner}`;
+        document.getElementById('about-mode').innerText = `Deployment: ${data.deployment_mode}`;
+      } catch (error) {
+        document.getElementById('about-project').innerText = 'Project: Unable to load';
+        document.getElementById('about-version').innerText = 'Version: -';
+        document.getElementById('about-owner').innerText = 'Owner: -';
+        document.getElementById('about-mode').innerText = error.message;
+      }
+    }
+
     async function loadDashboard() {
       const [users, cases] = await Promise.all([
         fetchJson('/users'),
@@ -237,6 +264,7 @@
         .join('');
 
       checkHealth();
+      loadAbout();
     }
 
     loadDashboard().catch((error) => {
@@ -246,4 +274,3 @@
   </script>
 </body>
 </html>
-

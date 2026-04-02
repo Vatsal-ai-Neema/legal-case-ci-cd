@@ -12,6 +12,14 @@ def test_health_endpoint() -> None:
     assert response.json()["status"] == "healthy"
 
 
+def test_about_endpoint() -> None:
+    response = client.get("/about")
+
+    assert response.status_code == 200
+    assert response.json()["project"] == "Legal Case CI/CD App"
+    assert response.json()["deployment_mode"] == "Self-hosted CD on laptop"
+
+
 def test_users_endpoint_returns_seeded_data() -> None:
     response = client.get("/users")
 
@@ -59,4 +67,3 @@ def test_auth_login_failure() -> None:
     )
 
     assert response.status_code == 401
-
